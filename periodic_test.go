@@ -15,6 +15,14 @@ func ExampleServe() {
 	cancel <- true
 }
 
+// This is an example of cancelling a sleep
+func ExampleSleepOrCancel() {
+	cancel := make(chan bool)
+	periodic.SleepOrCancel(10*time.Second, cancel)
+	time.Sleep(time.Second)
+	cancel <- true
+}
+
 func TestSleepOrCancelTimesOut(t *testing.T) {
 	// test without cancel provided
 	if !periodic.SleepOrCancel(time.Millisecond, nil) {
