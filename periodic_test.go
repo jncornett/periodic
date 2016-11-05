@@ -1,11 +1,18 @@
 package periodic_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/jncornett/periodic"
 )
+
+func ExampleServe() {
+	cancel := periodic.Serve(time.Second, func() { fmt.Println("hello") }, nil)
+	time.Sleep(time.Minute)
+	cancel <- true
+}
 
 func TestSleepOrCancelTimesOut(t *testing.T) {
 	// test without cancel provided
