@@ -13,7 +13,7 @@ func Serve(period time.Duration, task func(), cancel chan bool) chan bool {
 	}
 	go func() {
 		for {
-			if !SleepOrCancel(period, cancel) {
+			if !Sleep(period, cancel) {
 				return
 			}
 			task()
@@ -22,12 +22,12 @@ func Serve(period time.Duration, task func(), cancel chan bool) chan bool {
 	return cancel
 }
 
-// SleepOrCancel will block until interval passes, or cancel is read from.
+// Sleep will block until interval passes, or cancel is read from.
 // To cancel the sleep, simply send a value to cancel. Cancel can be nil,
 // in which case the caller will not be able to cancel the sleep.
-// SleepOrCancel returns true if it completed sleeping,
+// Sleep returns true if it completed sleeping,
 // and returns false if it was cancelled.
-func SleepOrCancel(interval time.Duration, cancel <-chan bool) bool {
+func Sleep(interval time.Duration, cancel <-chan bool) bool {
 	timeout := make(chan bool)
 	go func() {
 		time.Sleep(interval)

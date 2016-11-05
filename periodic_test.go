@@ -16,29 +16,29 @@ func ExampleServe() {
 }
 
 // This is an example of cancelling a sleep
-func ExampleSleepOrCancel() {
+func ExampleSleep() {
 	cancel := make(chan bool)
-	periodic.SleepOrCancel(10*time.Second, cancel)
+	periodic.Sleep(10*time.Second, cancel)
 	time.Sleep(time.Second)
 	cancel <- true
 }
 
-func TestSleepOrCancelTimesOut(t *testing.T) {
+func TestSleepTimesOut(t *testing.T) {
 	// test without cancel provided
-	if !periodic.SleepOrCancel(time.Millisecond, nil) {
-		t.Error("expected SleepOrCancel to return true")
+	if !periodic.Sleep(time.Millisecond, nil) {
+		t.Error("expected Sleep to return true")
 	}
 	// test with cancel provided
-	if !periodic.SleepOrCancel(time.Millisecond, make(chan bool)) {
-		t.Error("expected SleepOrCancel to return true")
+	if !periodic.Sleep(time.Millisecond, make(chan bool)) {
+		t.Error("expected Sleep to return true")
 	}
 }
 
-func TestSleepOrCancelGetsCancelled(t *testing.T) {
+func TestSleepGetsCancelled(t *testing.T) {
 	cancel := make(chan bool)
 	go func() { cancel <- true }()
-	if periodic.SleepOrCancel(time.Minute, cancel) {
-		t.Error("expected SleepOrCancel to return false")
+	if periodic.Sleep(time.Minute, cancel) {
+		t.Error("expected Sleep to return false")
 	}
 }
 
