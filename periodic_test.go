@@ -8,6 +8,7 @@ import (
 	"github.com/jncornett/periodic"
 )
 
+// This example prints "hello" every second for one minute and then stops
 func ExampleServe() {
 	cancel := periodic.Serve(time.Second, func() { fmt.Println("hello") }, nil)
 	time.Sleep(time.Minute)
