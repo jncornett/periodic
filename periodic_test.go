@@ -34,9 +34,12 @@ func ExampleSleep() {
 // This is an example of cancelling a sleep
 func ExampleSleepBlocking() {
 	cancel := make(chan bool)
+	// Cancel SleepBlocking after 1 millisecond
+	go func() {
+		time.Sleep(time.Millisecond)
+		cancel <- true
+	}()
 	periodic.SleepBlocking(10*time.Second, cancel)
-	time.Sleep(time.Second)
-	cancel <- true
 }
 
 func TestSleepBlockingTimesOut(t *testing.T) {
