@@ -15,30 +15,99 @@ func ExampleServe() {
 	cancel <- true
 }
 
-// This is an example of cancelling a sleep
+// This example demonstrates the use of the signal channels in the non-blocking sleep function.
 func ExampleSleep() {
+	done, cancel := periodic.Sleep(time.Minute, nil, nil)
+	// Cancel periodic.Sleep after 1 millisecond
+	go func() {
+		time.Sleep(time.Millisecond)
+		cancel <- true
+	}()
+	if <-done {
+		fmt.Println("sleep completed successfully")
+	} else {
+		fmt.Println("sleep was cancelled")
+	}
+	// OUTPUT: sleep was cancelled
+}
+
+// This is an example of cancelling a sleep
+func ExampleSleepBlocking() {
 	cancel := make(chan bool)
-	periodic.Sleep(10*time.Second, cancel)
+	periodic.SleepBlocking(10*time.Second, cancel)
 	time.Sleep(time.Second)
 	cancel <- true
 }
 
-func TestSleepTimesOut(t *testing.T) {
+func TestSleepBlockingTimesOut(t *testing.T) {
 	// test without cancel provided
-	if !periodic.Sleep(time.Millisecond, nil) {
+	if !periodic.SleepBlocking(time.Millisecond, nil) {
 		t.Error("expected Sleep to return true")
 	}
 	// test with cancel provided
-	if !periodic.Sleep(time.Millisecond, make(chan bool)) {
-		t.Error("expected Sleep to return true")
+	if !periodic.SleepBlocking(time.Millisecond, make(chan bool)) {
+		t.Error("expected SleepBlocking to return true")
+	}
+}
+
+func TestSleepBlockingGetsCancelled(t *testing.T) {
+	cancel := make(chan bool)
+	go func() { cancel <- true }()
+	if periodic.SleepBlocking(time.Minute, cancel) {
+		t.Error("expected SleepBlocking to return false")
+	}
+}
+
+func TestSleepTimesOut(t *testing.T) {
+	done := make(chan bool, 1)
+	periodic.Sleep(time.Millisecond, done, nil)
+	if !<-done {
+		t.Error("expected true to be sent on the done channel")
 	}
 }
 
 func TestSleepGetsCancelled(t *testing.T) {
+	done := make(chan bool, 1)
+	cancel := make(chan bool, 1)
+	periodic.Sleep(time.Minute, done, cancel)
+	cancel <- true
+	if <-done {
+		t.Error("expected false to be sent on the done channel")
+	}
+}
+
+func TestSleepReturnsIdenticalChannels(t *testing.T) {
+	done := make(chan bool)
 	cancel := make(chan bool)
-	go func() { cancel <- true }()
-	if periodic.Sleep(time.Minute, cancel) {
-		t.Error("expected Sleep to return false")
+	done2, cancel2 := periodic.Sleep(time.Millisecond, done, cancel)
+	if done != done2 {
+		t.Errorf("expected identical done channels, but %v != %v", done, done2)
+	}
+	if cancel != cancel2 {
+		t.Errorf("expected identical cancel channels, but %v != %v", cancel, cancel2)
+	}
+}
+
+func TestSleepCreatesDoneOnNilParameter(t *testing.T) {
+	cancel := make(chan bool)
+	done, _ := periodic.Sleep(time.Millisecond, nil, cancel)
+	if done == nil {
+		t.Error("expected done to not be nil")
+	}
+	if !<-done {
+		t.Error("expected done to receive true")
+	}
+}
+
+func TestSleepCreatesCancelOnNilParamter(t *testing.T) {
+	done := make(chan bool)
+	_, cancel := periodic.Sleep(time.Minute, done, nil)
+	if cancel == nil {
+		t.Error("expected cancel to not be nil")
+	}
+	cancel <- true
+	if <-done {
+		t.Error("expected done to receive false")
 	}
 }
 
